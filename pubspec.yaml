@@ -1,6 +1,6 @@
 name: moxlib
 description: A collection of code for sharing between various moxxy libraries. Not inteded for outside use.
-version: 0.1.2
+version: 0.1.3
 homepage: https://codeberg.org/moxxy/moxlib
 publish_to: https://pub.polynom.me
 

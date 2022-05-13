@@ -9,3 +9,7 @@
 ## 0.1.2
 
 * Add [DeterministicFiniteAutomaton] and [MealyAutomaton]
+
+## 0.1.3
+
+* Add [implies] from the Moxxy main repository
