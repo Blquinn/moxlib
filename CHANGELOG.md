@@ -5,3 +5,7 @@
 ## 0.1.1
 
 * Switch to selfhosted pub repository
+
+## 0.1.2
+
+* Add [DeterministicFiniteAutomaton] and [MealyAutomaton]
