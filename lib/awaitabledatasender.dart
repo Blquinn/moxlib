@@ -72,6 +72,7 @@ abstract class AwaitableDataSender<
   /// Future will be returned that can be used to await a response. If it
   /// is false, then null will be imediately resolved.
   Future<R?> sendData(S data, { bool awaitable = true, @visibleForTesting String? id }) async {
+    // ignore: no_leading_underscores_for_local_identifiers
     final _id = id ?? _uuid.v4();
     Future<R?> future = Future.value(null);
     _log.fine("sendData: Waiting to acquire lock...");
