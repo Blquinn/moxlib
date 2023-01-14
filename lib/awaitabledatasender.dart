@@ -1,39 +1,43 @@
-import "dart:async";
-
-import "package:synchronized/synchronized.dart";
-import "package:uuid/uuid.dart";
-import "package:logging/logging.dart";
-import "package:meta/meta.dart";
+import 'dart:async';
+import 'package:logging/logging.dart';
+import 'package:meta/meta.dart';
+import 'package:synchronized/synchronized.dart';
+import 'package:uuid/uuid.dart';
 
 /// Interface to allow arbitrary data to be sent as long as it can be
 /// JSON serialized/deserialized.
 class JsonImplementation {
   JsonImplementation();
 
-  Map<String, dynamic> toJson() => {};
+  // ignore: avoid_unused_constructor_parameters
   factory JsonImplementation.fromJson(Map<String, dynamic> json) {
     return JsonImplementation();
   }
+  
+  Map<String, dynamic> toJson() => {};
 }
 
 /// Wrapper class that adds an ID to the data packet to be sent.
 class DataWrapper<T extends JsonImplementation> {
-  final String id;
-  final T data;
-
   const DataWrapper(
     this.id,
-    this.data
+    this.data,
   );
 
+  /// The id of the data packet.
+  final String id;
+
+  /// The actual data.
+  final T data;
+  
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "data": data.toJson()
+    'id': id,
+    'data': data.toJson()
   };
 
   static DataWrapper fromJson<T extends JsonImplementation>(Map<String, dynamic> json) => DataWrapper<T>(
-    json["id"]! as String,
-    json["data"]! as T
+    json['id']! as String,
+    json['data']! as T,
   );
   
   DataWrapper reply(T newData) => DataWrapper(id, newData);
@@ -49,16 +53,23 @@ abstract class AwaitableDataSender<
   S extends JsonImplementation,
   R extends JsonImplementation
 > {
-  final Lock _lock;
-  final Map<String, Completer<R>> _awaitables;
-  final Uuid _uuid;
-  final Logger _log;
-
   @mustCallSuper
-  AwaitableDataSender() : _awaitables = {}, _uuid = const Uuid(), _lock = Lock(), _log = Logger("AwaitableDataSender");
+  AwaitableDataSender();
 
+  /// A mapping of ID to completer for pending requests.
+  final Map<String, Completer<R>> _awaitables = {};
+  
+  /// Critical section for accessing [AwaitableDataSender._awaitables].
+  final Lock _lock = Lock();
+
+  /// A UUID object for generating UUIDs.
+  final Uuid _uuid = const Uuid();
+
+  /// A logger.
+  final Logger _log = Logger('AwaitableDataSender');
+  
   @visibleForTesting
-  Map<String, Completer> getAwaitables() => _awaitables;
+  Map<String, Completer<R>> getAwaitables() => _awaitables;
 
   /// Called after an awaitable has been added.
   @visibleForTesting
@@ -74,10 +85,10 @@ abstract class AwaitableDataSender<
   Future<R?> sendData(S data, { bool awaitable = true, @visibleForTesting String? id }) async {
     // ignore: no_leading_underscores_for_local_identifiers
     final _id = id ?? _uuid.v4();
-    Future<R?> future = Future.value(null);
-    _log.fine("sendData: Waiting to acquire lock...");
+    var future = Future<R?>.value();
+    _log.fine('sendData: Waiting to acquire lock...');
     await _lock.synchronized(() async {
-        _log.fine("sendData: Done");
+        _log.fine('sendData: Done');
         if (awaitable) {
           _awaitables[_id] = Completer();
           onAdd();
@@ -86,15 +97,15 @@ abstract class AwaitableDataSender<
         await sendDataImpl(
           DataWrapper<S>(
             _id,
-            data
-          )
+            data,
+          ),
         );
 
         if (awaitable) {
           future = _awaitables[_id]!.future;
         }
 
-        _log.fine("sendData: Releasing lock...");
+        _log.fine('sendData: Releasing lock...');
     });
 
     return future;
@@ -103,24 +114,21 @@ abstract class AwaitableDataSender<
   /// Should be called when a [DataWrapper] has been received. Will resolve
   /// the promise received from [sendData].
   Future<bool> onData(DataWrapper<R> data) async {
-    bool found = false;
-    Completer? completer;
-    _log.fine("onData: Waiting to acquire lock...");
-    await _lock.synchronized(() async {
-        _log.fine("onData: Done");
-        completer = _awaitables[data.id];
-        if (completer != null) {
-          _awaitables.remove(data.id);
-          found = true;
-        }
+    _log.fine('onData: Waiting to acquire lock...');
+    final completer = await _lock.synchronized(() async {
+      _log.fine('onData: Done');
+      final c = _awaitables[data.id];
+      if (c != null) {
+        _awaitables.remove(data.id);
+        return c;
+      }
 
-        _log.fine("onData: Releasing lock");
+      _log.fine('onData: Releasing lock');
+      return null;
     });
 
-    if (found) {
-      completer!.complete(data.data);
-    }
+    completer?.complete(data.data);
     
-    return found;
+    return completer != null;
   }
 }
