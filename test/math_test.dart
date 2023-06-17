@@ -1,5 +1,4 @@
-import 'package:moxlib/math.dart';
-
+import 'package:moxlib/moxlib.dart';
 import 'package:test/test.dart';
 
 void main() {

@@ -1,5 +1,4 @@
-import 'package:moxlib/awaitabledatasender.dart';
-
+import 'package:moxlib/moxlib.dart';
 import 'package:test/test.dart';
 
 class TestDataType implements JsonImplementation {

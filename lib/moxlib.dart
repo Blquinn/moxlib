@@ -1,4 +1,5 @@
 library moxlib;
 
-export 'awaitabledatasender.dart';
-export 'math.dart';
+export 'src/awaitabledatasender.dart';
+export 'src/math.dart';
+export 'src/result.dart';
