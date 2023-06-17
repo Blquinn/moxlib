@@ -1,7 +1,7 @@
 {
   description = "moxlib";
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NANASHI0X74/nixpkgs/flutter-3-0-0";
     flake-utils.url = "github:numtide/flake-utils";
   };
 

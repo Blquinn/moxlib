@@ -1,29 +1,24 @@
-import "package:moxlib/awaitabledatasender.dart";
+import 'package:moxlib/awaitabledatasender.dart';
 
-import "package:test/test.dart";
+import 'package:test/test.dart';
 
 class TestDataType implements JsonImplementation {
-  final String data;
-
   TestDataType(this.data);
 
-  @override
-  Map<String, dynamic> toJson() => {
-    "data": data
-  };
+  factory TestDataType.fromJson(Map<String, dynamic> json) =>
+      TestDataType(json['data']! as String);
 
-  factory TestDataType.fromJson(Map<String, dynamic> json) => TestDataType(
-    json["data"]!
-  );
+  final String data;
+
+  @override
+  Map<String, dynamic> toJson() => {'data': data};
 }
 
-class FakeAwaitableDataSender<
-  S extends JsonImplementation,
-  R extends JsonImplementation
-> extends AwaitableDataSender<S, R> {
-  final void Function()? onAddFunc;
+class FakeAwaitableDataSender<S extends JsonImplementation,
+    R extends JsonImplementation> extends AwaitableDataSender<S, R> {
+  FakeAwaitableDataSender({this.onAddFunc}) : super();
 
-  FakeAwaitableDataSender({ this.onAddFunc }) : super();
+  final void Function()? onAddFunc;
 
   @override
   Future<void> sendDataImpl(DataWrapper data) async {}
@@ -35,39 +30,41 @@ class FakeAwaitableDataSender<
 }
 
 void main() {
-  test("Sending an event without awaiting it", () async {
-      final handler = FakeAwaitableDataSender<TestDataType, TestDataType>();
-      final result = await handler.sendData(TestDataType("hallo"), awaitable: false);
+  test('Sending an event without awaiting it', () async {
+    final handler = FakeAwaitableDataSender<TestDataType, TestDataType>();
+    final result =
+        await handler.sendData(TestDataType('hallo'), awaitable: false);
 
-      expect(result, null);
-      expect(handler.getAwaitables().length, 0);
+    expect(result, null);
+    expect(handler.getAwaitables().length, 0);
   });
 
-  test("Sending an event without awaiting it", () async {
-      final handler = FakeAwaitableDataSender<TestDataType, TestDataType>();
-      const id = "abc123";
-      final result = handler.sendData(TestDataType("hallo"), awaitable: true, id: id);
-      await handler.onData(DataWrapper(id, TestDataType("welt")));
+  test('Sending an event without awaiting it', () async {
+    final handler = FakeAwaitableDataSender<TestDataType, TestDataType>();
+    const id = 'abc123';
+    final result =
+        handler.sendData(TestDataType('hallo'), awaitable: true, id: id);
+    await handler.onData(DataWrapper(id, TestDataType('welt')));
 
-      expect((await result)!.data, "welt");
-      expect(handler.getAwaitables().length, 0);
+    expect((await result)!.data, 'welt');
+    expect(handler.getAwaitables().length, 0);
   });
 
-  test("Queue multiple data packets and resolve in reverse order", () async {
-      int i = 0;
-      final handler = FakeAwaitableDataSender<TestDataType, TestDataType>(
-        onAddFunc: () {
-          i++;
-          expect(i <= 2, true); 
-        }
-      );
-      final a = handler.sendData(TestDataType("1"), id: "1");
-      final b = handler.sendData(TestDataType("2"), id: "2");
+  test('Queue multiple data packets and resolve in reverse order', () async {
+    var i = 0;
+    final handler = FakeAwaitableDataSender<TestDataType, TestDataType>(
+      onAddFunc: () {
+        i++;
+        expect(i <= 2, true);
+      },
+    );
+    final a = handler.sendData(TestDataType('1'), id: '1');
+    final b = handler.sendData(TestDataType('2'), id: '2');
 
-      await handler.onData(DataWrapper("2", TestDataType("4")));
-      await handler.onData(DataWrapper("1", TestDataType("1")));
+    await handler.onData(DataWrapper('2', TestDataType('4')));
+    await handler.onData(DataWrapper('1', TestDataType('1')));
 
-      expect((await a)!.data, "1");
-      expect((await b)!.data, "4");
+    expect((await a)!.data, '1');
+    expect((await b)!.data, '4');
   });
 }
