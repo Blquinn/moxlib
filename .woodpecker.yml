@@ -20,5 +20,4 @@ pipeline:
     secrets: [ xmpp_jid, xmpp_password, xmpp_server ]
     when:
       status:
-        - success
         - failure
