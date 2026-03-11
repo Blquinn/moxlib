@@ -51,7 +51,6 @@ class DataWrapper<T extends JsonImplementation> {
 /// received via [onData].
 abstract class AwaitableDataSender<S extends JsonImplementation,
     R extends JsonImplementation> {
-  @mustCallSuper
   AwaitableDataSender();
 
   /// A mapping of ID to completer for pending requests.

@@ -1,4 +1,3 @@
-library moxlib;
 
 export 'src/awaitabledatasender.dart';
 export 'src/math.dart';
